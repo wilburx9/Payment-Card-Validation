@@ -32,7 +32,7 @@ enum CardType {
 }
 
 
-class PaymentCardValidator {
+class CardUtils {
   static String validateCVV(String value) {
     if (value.isEmpty) {
       return Strings.fieldReq;
@@ -281,16 +281,16 @@ class PaymentCardValidator {
         break;
       case CardType.Others:
         icon = new Icon(
-          Icons.help,
-          size: 30.0,
-          color: Colors.green,
+          Icons.credit_card,
+          size: 40.0,
+          color: Colors.grey[600],
         );
         break;
       case CardType.Invalid:
         icon = new Icon(
           Icons.warning,
-          size: 30.0,
-          color: Colors.red,
+          size: 40.0,
+          color: Colors.grey[600],
         );
         break;
     }
@@ -298,8 +298,7 @@ class PaymentCardValidator {
     if (img.isNotEmpty) {
       widget = new Image.asset(
         'assets/images/$img',
-        height: 30.0,
-        width: 60.0,
+        width: 40.0,
       );
     } else {
       widget = icon;
@@ -336,5 +335,63 @@ class PaymentCardValidator {
       buffer.write('x');
     }
     return buffer.toString();
+  }
+
+  static String validateCardNumWithLuhnAlgorithm(String input) {
+    if (input.isEmpty) {
+      return Strings.fieldReq;
+    }
+
+    input = getCleanedNumber(input);
+
+    if (input.length < 8) {
+      return Strings.numberIsInvalid;
+    }
+
+    int sum = 0;
+    int length = input.length;
+    for (var i = 0; i < length; i++) {
+      // get digits in reverse order
+      int digit = int.parse(input[length - i - 1]);
+
+      // every 2nd number multiply with 2
+      if (i % 2 == 1) {
+        digit *= 2;
+      }
+      sum += digit > 9 ? (digit - 9) : digit;
+    }
+
+    if (sum % 10 == 0) {
+      return null;
+    }
+
+    return "Card is invalid";
+  }
+
+  static CardType getCardTypeFrmNumber(String input) {
+    CardType cardType;
+    if (input.startsWith(new RegExp(
+        r'((5[1-5])|(222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720))'))) {
+      cardType = CardType.Master;
+    } else if (input.startsWith(new RegExp(r'[4]'))) {
+      cardType = CardType.Visa;
+    } else if (input
+        .startsWith(new RegExp(r'((506(0|1))|(507(8|9))|(6500))'))) {
+      cardType = CardType.Verve;
+    } else if (input.startsWith(new RegExp(r'((34)|(37))'))) {
+      cardType = CardType.AmericanExpress;
+    } else if (input.startsWith(new RegExp(r'((6[45])|(6011))'))) {
+      cardType = CardType.Discover;
+    } else if (input
+        .startsWith(new RegExp(r'((30[0-5])|(3[89])|(36)|(3095))'))) {
+      cardType = CardType.DinersClub;
+    } else if (input.startsWith(new RegExp(r'(352[89]|35[3-8][0-9])'))) {
+      cardType = CardType.Jcb;
+    } else if (input.length <= 8) {
+      cardType = CardType.Others;
+    } else {
+      cardType = CardType.Invalid;
+    }
+    return cardType;
   }
 }
