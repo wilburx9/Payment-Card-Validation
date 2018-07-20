@@ -31,7 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var _scaffoldKey = new GlobalKey<ScaffoldState>();
   var _formKey = new GlobalKey<FormState>();
   var numberController = new TextEditingController();
-  var _cardInfo = PaymentCard();
+  var _paymentCard = PaymentCard();
   var _autoValidate = false;
 
   var _card = new PaymentCard();
@@ -39,7 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _cardInfo.type = CardType.Others;
+    _paymentCard.type = CardType.Others;
     numberController.addListener(_getCardTypeFrmNumber);
   }
 
@@ -82,26 +82,27 @@ class _MyHomePageState extends State<MyHomePage> {
                     height: 30.0,
                   ),
                   new TextFormField(
-                    controller: numberController,
+                    keyboardType: TextInputType.number,
                     inputFormatters: [
                       WhitelistingTextInputFormatter.digitsOnly,
                       new LengthLimitingTextInputFormatter(19),
                       new CardNumberInputFormatter()
                     ],
+                    controller: numberController,
                     decoration: new InputDecoration(
                       border: const UnderlineInputBorder(),
                       filled: true,
-                      icon: CardUtils.getCardIcon(_cardInfo.type),
+                      icon: CardUtils.getCardIcon(_paymentCard.type),
                       hintText: 'What number is written on card?',
                       labelText: 'Number',
                     ),
                     onSaved: (String value) {
-                      _cardInfo.number =
-                          CardUtils.getCleanedNumber(numberController.text);
+                      print('onSaved = $value');
+                      print('Num controller has = ${numberController.text}');
+                      _paymentCard.number =
+                          CardUtils.getCleanedNumber(value);
                     },
-                    keyboardType: TextInputType.number,
-                    validator: CardUtils.validateCardNumWithLuhnAlgorithm,
-                    // validator: PaymentCardValidator.,
+                    validator: CardUtils.validateCardNum,
                   ),
                   new SizedBox(
                     height: 30.0,
@@ -125,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     validator: CardUtils.validateCVV,
                     keyboardType: TextInputType.number,
                     onSaved: (value) {
-                      _cardInfo.cvv = int.parse(value);
+                      _paymentCard.cvv = int.parse(value);
                     },
                   ),
                   new SizedBox(
@@ -152,8 +153,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     keyboardType: TextInputType.number,
                     onSaved: (value) {
                       List<int> expiryDate = CardUtils.getExpiryDate(value);
-                      _cardInfo.month = expiryDate[0];
-                      _cardInfo.year = expiryDate[1];
+                      _paymentCard.month = expiryDate[0];
+                      _paymentCard.year = expiryDate[1];
                     },
                   ),
                   new SizedBox(
@@ -195,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
     String input = CardUtils.getCleanedNumber(numberController.text);
     CardType cardType = CardUtils.getCardTypeFrmNumber(input);
     setState(() {
-      this._cardInfo.type = cardType;
+      this._paymentCard.type = cardType;
     });
   }
 

@@ -31,7 +31,6 @@ enum CardType {
   Invalid
 }
 
-
 class CardUtils {
   static String validateCVV(String value) {
     if (value.isEmpty) {
@@ -51,49 +50,40 @@ class CardUtils {
 
     int year;
     int month;
+    // The value contains a forward slash if the month and year has been
+    // entered.
     if (value.contains(new RegExp(r'(\/)'))) {
       var split = value.split(new RegExp(r'(\/)'));
+      // The value before the slash is the month while the value to right of
+      // it is the year.
       month = int.parse(split[0]);
       year = int.parse(split[1]);
-    } else {
+
+    } else { // Only the month was entered
       month = int.parse(value.substring(0, (value.length)));
-      year = -1;
+      year = -1; // Lets use an invalid year intentionally
     }
 
     if ((month < 1) || (month > 12)) {
+      // A valid month is between 1 (January) and 12 (December)
       return 'Expiry month is invalid';
     }
 
-    var normalizeY = normalizeYear(year);
-    if ((normalizeY < 1) || (normalizeY > 2099)) {
+    var fourDigitsYear = convertYearTo4Digits(year);
+    if ((fourDigitsYear < 1) || (fourDigitsYear > 2099)) {
+      // We are assuming a valid should be between 1 and 2099.
+      // Note that, it's valid doesn't mean that it has not expired.
       return 'Expiry year is invalid';
     }
 
-    if (!validExpiryDate(month, year)) {
+    if (!hasDateExpired(month, year)) {
       return "Card has expired";
     }
     return null;
   }
 
-  static String getEnteredNumLength(String text) {
-    String numbers = getCleanedNumber(text);
-    return '${numbers.length}/19';
-  }
-
-  static bool hasMonthPassed(int year, int month) {
-    var now = DateTime.now();
-    return hasYearPassed(year) ||
-        normalizeYear(year) == now.year && (month < now.month + 1);
-  }
-
-  static bool hasYearPassed(int year) {
-    int normalizedYear = normalizeYear(year);
-    var now = DateTime.now();
-    return normalizedYear < now.year;
-  }
-
-  // Convert two-digit year to full year if necessary
-  static int normalizeYear(int year) {
+  /// Convert the two-digit year to four-digit year if necessary
+  static int convertYearTo4Digits(int year) {
     if (year < 100 && year >= 0) {
       var now = DateTime.now();
       String currentYear = now.year.toString();
@@ -103,13 +93,13 @@ class CardUtils {
     return year;
   }
 
-  static bool isNotExpired(int year, int month) {
-    return !hasYearPassed(year) && !hasMonthPassed(year, month);
+  static bool hasDateExpired(int month, int year) {
+    return !(month == null || year == null) && isNotExpired(year, month);
   }
 
-  static bool validExpiryDate(int month, int year) {
-    // I am supposed to check for a valid month but I have already done that
-    return !(month == null || year == null) && isNotExpired(year, month);
+  static bool isNotExpired(int year, int month) {
+    // It has not expired if both the year and date has not passed
+    return !hasYearPassed(year) && !hasMonthPassed(year, month);
   }
 
   static List<int> getExpiryDate(String value) {
@@ -117,141 +107,27 @@ class CardUtils {
     return [int.parse(split[0]), int.parse(split[1])];
   }
 
+  static bool hasMonthPassed(int year, int month) {
+    var now = DateTime.now();
+    // The month has passed if:
+    // 1. The year is in the past. In that case, we just assume that the month
+    // has passed
+    // 2. Card's month (plus another month) is more than current month.
+    return hasYearPassed(year) ||
+        convertYearTo4Digits(year) == now.year && (month < now.month + 1);
+  }
+
+  static bool hasYearPassed(int year) {
+    int fourDigitsYear = convertYearTo4Digits(year);
+    var now = DateTime.now();
+    // The year has passed if the year we are currently is more than card's
+    // year
+    return fourDigitsYear < now.year;
+  }
+
   static String getCleanedNumber(String text) {
     RegExp regExp = new RegExp(r"[^0-9]");
     return text.replaceAll(regExp, '');
-  }
-
-  static bool _validCVV(String value) {
-    if (value.isEmpty) {
-      return false;
-    }
-
-    if (value.length < 3 || value.length > 4) {
-      return false;
-    }
-    return true;
-  }
-
-  static bool _validCardNumWithLuhnAlgorithm(String value) {
-    if (value.isEmpty) {
-      return false;
-    }
-
-    String input = getCleanedNumber(value);
-
-    int sum = 0;
-    int length = input.length;
-    for (var i = 0; i < length; i++) {
-      // get digits in reverse order
-      int digit = int.parse(input[length - i - 1]);
-
-      // every 2nd number multiply with 2
-      if (i % 2 == 1) {
-        digit *= 2;
-      }
-      sum += digit > 9 ? (digit - 9) : digit;
-    }
-
-    if (sum % 10 == 0) {
-      return true;
-    }
-
-    return false;
-  }
-
-  static List<String> getIssuesWithCard(PaymentCard card) {
-    List<String> issues = [];
-    if (!_validCardNumWithLuhnAlgorithm(card.number)) {
-      issues.add('Card number is not complete or invalid');
-    }
-
-    if (!validExpiryDate(card.month, card.year)) {
-      issues.add('Expiry date is invalid or expired');
-    }
-
-    if(!_validCVV(card.cvv.toString())) {
-      issues.add('CVV is incomplete');
-    }
-
-    return issues;
-  }
-
-  static List<Color> getColorsFrmCardType(CardType cardType) {
-    List<Color> colors = [];
-    switch (cardType) {
-      case CardType.Master:
-        colors.add(Colors.deepPurple[800]);
-        colors.add(Colors.deepPurple[900]);
-        break;
-      case CardType.Visa:
-        colors.add(Colors.grey[300]);
-        colors.add(Colors.grey[400]);
-        break;
-      case CardType.AmericanExpress:
-        colors.add(Colors.red[700]);
-        colors.add(Colors.red[900]);
-        break;
-      case CardType.Discover:
-        colors.add(Colors.grey[900]);
-        colors.add(Colors.grey[800]);
-        break;
-      case CardType.Verve:
-        colors.add(Colors.grey[400]);
-        colors.add(Colors.grey[600]);
-        break;
-      case CardType.Others:
-        colors.add(Colors.black);
-        colors.add(Colors.grey[900]);
-        break;
-      case CardType.Invalid:
-        colors.add(Colors.brown[400]);
-        colors.add(Colors.brown[600]);
-        break;
-      case CardType.DinersClub:
-        colors.add(Colors.grey[100]);
-        colors.add(Colors.grey[500]);
-        break;
-      case CardType.Jcb:
-        colors.add(Colors.green[600]);
-        colors.add(Colors.green[800]);
-        break;
-    }
-    return colors;
-  }
-
-  static Color getTextColorFrmCardType(CardType cardType) {
-    Color color;
-    switch (cardType) {
-      case CardType.Master:
-        color = Colors.white;
-        break;
-      case CardType.Visa:
-        color = Colors.grey[850];
-        break;
-      case CardType.AmericanExpress:
-        color = Colors.grey[300];
-        break;
-      case CardType.Discover:
-        color = Colors.white;
-        break;
-      case CardType.Verve:
-        color = Colors.black;
-        break;
-      case CardType.Others:
-        color = Colors.white;
-        break;
-      case CardType.Invalid:
-        color = Colors.white;
-        break;
-      case CardType.DinersClub:
-        color = Colors.black;
-        break;
-      case CardType.Jcb:
-        color = Colors.grey[200];
-        break;
-    }
-    return color;
   }
 
   static Widget getCardIcon(CardType cardType) {
@@ -306,38 +182,10 @@ class CardUtils {
     return widget;
   }
 
-  static String getObscuredNumberWithSpaces(String string) {
-    assert(
-    !(string.length < 8),
-    'Card Number $string must be more than 8 '
-        'characters and above');
-    var length = string.length;
-    var buffer = new StringBuffer();
-    for (int i = 0; i < string.length; i++) {
-      if (i < (length - 4)) {
-        // The numbers before the last digits is changed to X
-        buffer.write('X');
-      } else {
-        // The last four numbers are spared
-        buffer.write(string[i]);
-      }
-      var nonZeroIndex = i + 1;
-      if (nonZeroIndex % 4 == 0 && nonZeroIndex != string.length) {
-        buffer.write(' ');
-      }
-    }
-    return buffer.toString();
-  }
 
-  static String getObscuredCVV(String cvv) {
-    var buffer = new StringBuffer();
-    for (var i = 0; i < cvv.length; i++) {
-      buffer.write('x');
-    }
-    return buffer.toString();
-  }
-
-  static String validateCardNumWithLuhnAlgorithm(String input) {
+  /// With the card number with Luhn Algorithm
+  /// https://en.wikipedia.org/wiki/Luhn_algorithm
+  static String validateCardNum(String input) {
     if (input.isEmpty) {
       return Strings.fieldReq;
     }
@@ -365,7 +213,7 @@ class CardUtils {
       return null;
     }
 
-    return "Card is invalid";
+    return Strings.numberIsInvalid;
   }
 
   static CardType getCardTypeFrmNumber(String input) {
