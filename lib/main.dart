@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:payment_card_validation/input_formatters.dart';
 import 'package:payment_card_validation/payment_card.dart';
 import 'package:payment_card_validation/my_strings.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() => runApp(new MyApp());
 
@@ -99,8 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     onSaved: (String value) {
                       print('onSaved = $value');
                       print('Num controller has = ${numberController.text}');
-                      _paymentCard.number =
-                          CardUtils.getCleanedNumber(value);
+                      _paymentCard.number = CardUtils.getCleanedNumber(value);
                     },
                     validator: CardUtils.validateCardNum,
                   ),
@@ -162,22 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   new Container(
                     alignment: Alignment.center,
-                    child: new RaisedButton(
-                      onPressed: _validateInputs,
-                      color: Colors.deepOrangeAccent,
-                      splashColor: Colors.deepPurple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(
-                            const Radius.circular(100.0)),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 15.0, horizontal: 80.0),
-                      textColor: Colors.white,
-                      child: new Text(
-                        'PAY',
-                        style: new TextStyle(fontSize: 17.0),
-                      ),
-                    ),
+                    child: _getPayButton(),
                   )
                 ],
               )),
@@ -211,6 +198,34 @@ class _MyHomePageState extends State<MyHomePage> {
       form.save();
       // Encrypt and send send payment details to payment gateway
       _showInSnackBar('Payment card is valid');
+    }
+  }
+
+  Widget _getPayButton() {
+    if (Platform.isIOS) {
+      return new CupertinoButton(
+        onPressed: _validateInputs,
+        color: CupertinoColors.activeBlue,
+        child: const Text(
+          Strings.pay,
+          style: const TextStyle(fontSize: 17.0),
+        ),
+      );
+    } else {
+      return new RaisedButton(
+        onPressed: _validateInputs,
+        color: Colors.deepOrangeAccent,
+        splashColor: Colors.deepPurple,
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.all(const Radius.circular(100.0)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 80.0),
+        textColor: Colors.white,
+        child: new Text(
+          Strings.pay.toUpperCase(),
+          style: const TextStyle(fontSize: 17.0),
+        ),
+      );
     }
   }
 
