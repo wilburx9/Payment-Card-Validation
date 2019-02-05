@@ -24,10 +24,10 @@ android {
 
     lintOptions {
         disable 'InvalidPackage'
-    }
+    }https://pay.google.com/payments/home#paymentMethods
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-idhttps://pay.google.com/payments/home#paymentMethods
         applicationId "com.jadebyte.paymentcardvalidation"
         minSdkVersion 16
         targetSdkVersion 27
