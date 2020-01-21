@@ -1,5 +1,6 @@
 name: payment_card_validation
 description: A new Flutter application demonstrating how to validate payment card number, cvv and date.
+version: 1.0.0+1
 
 dependencies:
   flutter:

@@ -9,3 +9,4 @@ build/
 
 .flutter-plugins
 pubspec.lock
+/ios/Flutter/flutter_export_environment.sh
