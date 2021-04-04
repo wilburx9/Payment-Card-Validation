@@ -35,7 +35,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var _formKey = new GlobalKey<FormState>();
   var numberController = new TextEditingController();
   var _paymentCard = PaymentCard();
-  var _autoValidate = false;
+  var _autoValidateMode = AutovalidateMode.disabled;
 
   var _card = new PaymentCard();
 
@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
           padding: const EdgeInsets.symmetric(horizontal: 15.0),
           child: new Form(
               key: _formKey,
-              autovalidate: _autoValidate,
+              autovalidateMode: _autoValidateMode,
               child: new ListView(
                 children: <Widget>[
                   new SizedBox(
@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   new TextFormField(
                     keyboardType: TextInputType.number,
                     inputFormatters: [
-                      WhitelistingTextInputFormatter.digitsOnly,
+                      FilteringTextInputFormatter.digitsOnly,
                       new LengthLimitingTextInputFormatter(19),
                       new CardNumberInputFormatter()
                     ],
@@ -111,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   new TextFormField(
                     inputFormatters: [
-                      WhitelistingTextInputFormatter.digitsOnly,
+                      FilteringTextInputFormatter.digitsOnly,
                       new LengthLimitingTextInputFormatter(4),
                     ],
                     decoration: new InputDecoration(
@@ -136,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   new TextFormField(
                     inputFormatters: [
-                      WhitelistingTextInputFormatter.digitsOnly,
+                      FilteringTextInputFormatter.digitsOnly,
                       new LengthLimitingTextInputFormatter(4),
                       new CardMonthInputFormatter()
                     ],
@@ -191,7 +191,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final FormState form = _formKey.currentState!;
     if (!form.validate()) {
       setState(() {
-        _autoValidate = true; // Start validating on every change.
+        _autoValidateMode =
+            AutovalidateMode.always; // Start validating on every change.
       });
       _showInSnackBar('Please fix the errors in red before submitting.');
     } else {
@@ -212,15 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     } else {
-      return new RaisedButton(
+      return new ElevatedButton(
         onPressed: _validateInputs,
-        color: Colors.deepOrangeAccent,
-        splashColor: Colors.deepPurple,
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.all(const Radius.circular(100.0)),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 80.0),
-        textColor: Colors.white,
         child: new Text(
           Strings.pay.toUpperCase(),
           style: const TextStyle(fontSize: 17.0),
@@ -230,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _showInSnackBar(String value) {
-    _scaffoldKey.currentState!.showSnackBar(new SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
       content: new Text(value),
       duration: new Duration(seconds: 3),
     ));
