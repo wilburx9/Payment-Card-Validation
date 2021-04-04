@@ -1,14 +1,13 @@
 import 'package:payment_card_validation/my_strings.dart';
 import 'package:flutter/material.dart';
 
-
 class PaymentCard {
-  CardType type;
-  String number;
-  String name;
-  int month;
-  int year;
-  int cvv;
+  CardType? type;
+  String? number;
+  String? name;
+  int? month;
+  int? year;
+  int? cvv;
 
   PaymentCard(
       {this.type, this.number, this.name, this.month, this.year, this.cvv});
@@ -32,8 +31,8 @@ enum CardType {
 }
 
 class CardUtils {
-  static String validateCVV(String value) {
-    if (value.isEmpty) {
+  static String? validateCVV(String? value) {
+    if (value == null || value.isEmpty) {
       return Strings.fieldReq;
     }
 
@@ -43,8 +42,8 @@ class CardUtils {
     return null;
   }
 
-  static String validateDate(String value) {
-    if (value.isEmpty) {
+  static String? validateDate(String? value) {
+    if (value == null || value.isEmpty) {
       return Strings.fieldReq;
     }
 
@@ -52,14 +51,14 @@ class CardUtils {
     int month;
     // The value contains a forward slash if the month and year has been
     // entered.
-    if (value.contains(new RegExp(r'(\/)'))) {
-      var split = value.split(new RegExp(r'(\/)'));
+    if (value.contains(new RegExp(r'(/)'))) {
+      var split = value.split(new RegExp(r'(/)'));
       // The value before the slash is the month while the value to right of
       // it is the year.
       month = int.parse(split[0]);
       year = int.parse(split[1]);
-
-    } else { // Only the month was entered
+    } else {
+      // Only the month was entered
       month = int.parse(value.substring(0, (value.length)));
       year = -1; // Lets use an invalid year intentionally
     }
@@ -94,7 +93,7 @@ class CardUtils {
   }
 
   static bool hasDateExpired(int month, int year) {
-    return !(month == null || year == null) && isNotExpired(year, month);
+    return isNotExpired(year, month);
   }
 
   static bool isNotExpired(int year, int month) {
@@ -103,7 +102,7 @@ class CardUtils {
   }
 
   static List<int> getExpiryDate(String value) {
-    var split = value.split(new RegExp(r'(\/)'));
+    var split = value.split(new RegExp(r'(/)'));
     return [int.parse(split[0]), int.parse(split[1])];
   }
 
@@ -130,9 +129,9 @@ class CardUtils {
     return text.replaceAll(regExp, '');
   }
 
-  static Widget getCardIcon(CardType cardType) {
+  static Widget? getCardIcon(CardType? cardType) {
     String img = "";
-    Icon icon;
+    Icon? icon;
     switch (cardType) {
       case CardType.Master:
         img = 'mastercard.png';
@@ -162,7 +161,7 @@ class CardUtils {
           color: Colors.grey[600],
         );
         break;
-      case CardType.Invalid:
+      default:
         icon = new Icon(
           Icons.warning,
           size: 40.0,
@@ -170,7 +169,7 @@ class CardUtils {
         );
         break;
     }
-    Widget widget;
+    Widget? widget;
     if (img.isNotEmpty) {
       widget = new Image.asset(
         'assets/images/$img',
@@ -182,11 +181,10 @@ class CardUtils {
     return widget;
   }
 
-
   /// With the card number with Luhn Algorithm
   /// https://en.wikipedia.org/wiki/Luhn_algorithm
-  static String validateCardNum(String input) {
-    if (input.isEmpty) {
+  static String? validateCardNum(String? input) {
+    if (input == null || input.isEmpty) {
       return Strings.fieldReq;
     }
 
